@@ -1,47 +1,33 @@
 cmake_minimum_required(VERSION 3.14)
 
-set(project_name "EnlyzeWinCompatLib")
-project(${project_name} C CXX ASM_MASM)
-
-set(CMAKE_ASM_MASM_COMPILE_OBJECT "<CMAKE_ASM_MASM_COMPILER> /Cp /safeseh /Fo <OBJECT> /c /Ta <SOURCE>" CACHE STRING "CMAKE_ASM_MASM_COMPILE_OBJECT" FORCE)
-message(STATUS "Compiling MASM file using command line: ${CMAKE_ASM_MASM_COMPILE_OBJECT}")
-
-file(GLOB_RECURSE src
-    ${CMAKE_CURRENT_LIST_DIR}/*.c
-    ${CMAKE_CURRENT_LIST_DIR}/*.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/*.h
-    ${CMAKE_CURRENT_LIST_DIR}/*.asm
-)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 if(NOT WIN32)
     message(FATAL_ERROR "Unsupported platform detected")
 endif()
 
-add_library(${project_name}
-    STATIC ${src}
-)
+project(EnlyzeWinCompatLib-project C CXX ASM_MASM)
 
-target_link_libraries(${project_name}
-    PUBLIC "libcxx"
-)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin CACHE STRING "CMAKE_LIBRARY_OUTPUT_DIRECTORY" FORCE)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin CACHE STRING "CMAKE_RUNTIME_OUTPUT_DIRECTORY" FORCE)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin CACHE STRING "CMAKE_ARCHIVE_OUTPUT_DIRECTORY" FORCE)
 
-target_include_directories(${project_name}
-    PUBLIC ${CMAKE_CURRENT_BINARY_DIR}
-)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/bin CACHE STRING "CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG" FORCE)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/bin CACHE STRING "CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG" FORCE)
 
-target_compile_definitions(${project_name}
-    PUBLIC "_CRT_SECURE_NO_WARNINGS"
-    PUBLIC "_CRT_NONSTDC_NO_DEPRECATE"
-    PUBLIC "_LIBCPP_BUILDING_LIBRARY"
-    PUBLIC "_WIN32_WINNT=0x0400"
-    PUBLIC "_LIB"
-    PUBLIC "_UNICODE"
-    PUBLIC "UNICODE"
-)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-if(CMAKE_CXX_IS_CLANG_WIN)
-    target_compile_options(${project_name}
-        PRIVATE "-flto"
-        PRIVATE "-march=pentium-mmx"
-    )
-endif()
+set(CMAKE_MACOSX_RPATH 1 CACHE STRING "CMAKE_MACOSX_RPATH" FORCE)
+set(CMAKE_CXX_STANDARD 20 CACHE STRING "Set to 11 or 14 to enable C++11 or C++17 builds, respectively." FORCE)
+set(CMAKE_C_STANDARD 17 CACHE STRING "Set to 99 or 11 to enable C99 or C11 builds, respectively." FORCE)
+set_property(GLOBAL PROPERTY CXX_STANDARD_REQUIRED ON)
+set_property(GLOBAL PROPERTY C_STANDARD_REQUIRED ON)
+
+set(CMAKE_ASM_MASM_COMPILE_OBJECT "<CMAKE_ASM_MASM_COMPILER> /Cp /safeseh /Fo <OBJECT> /c /Ta <SOURCE>" CACHE STRING "CMAKE_ASM_MASM_COMPILE_OBJECT" FORCE)
+message(STATUS "Compiling MASM file using command line: ${CMAKE_ASM_MASM_COMPILE_OBJECT}")
+
+include(DetectClang)
+
+include(external/InitializeExternalComponents.cmake)
+
+add_subdirectory(src)
